@@ -1,18 +1,31 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Search, Filter, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { apiRequest } from '../utils/api'
 
 const Transactions = () => {
     const [filterAsset, setFilterAsset] = useState('All')
+    const [txs, setTxs] = useState([])
+    const [loading, setLoading] = useState(true)
 
-    const txs = [
-        { id: 'TX-9031', asset: 'USDT', amount: '5,000.00', user: '0x8A2...C1B2', time: '10:15:30', status: 'Pending' },
-        { id: 'TX-9030', asset: 'ETH', amount: '1.25', user: '0x3F1...E921', time: '09:42:15', status: 'Approved' },
-        { id: 'TX-9029', asset: 'BTC', amount: '0.042', user: '0x7D2...A410', time: '08:12:05', status: 'Rejected' },
-        { id: 'TX-9028', asset: 'USDT', amount: '12,400.00', user: '0x2C1...B811', time: 'Yesterday', status: 'Approved' },
-        { id: 'TX-9027', asset: 'USDT', amount: '250.00', user: '0x9E4...D220', time: 'Yesterday', status: 'Approved' },
-    ]
+    useEffect(() => {
+        const fetchTransactions = async () => {
+            try {
+                const data = await apiRequest('/admin/transactions');
+                setTxs(data);
+                setLoading(false);
+            } catch (error) {
+                console.error('Transactions fetch error:', error);
+                setLoading(false);
+            }
+        };
+        fetchTransactions();
+    }, []);
 
-    const filteredTxs = filterAsset === 'All' ? txs : txs.filter(t => t.asset === filterAsset)
+    const filteredTxs = filterAsset === 'All' || filterAsset === 'All Assets'
+        ? txs
+        : txs.filter(t => t.asset === filterAsset)
+
+    if (loading) return <div>Loading transactions...</div>;
 
     return (
         <div className="view-animate">
@@ -45,7 +58,7 @@ const Transactions = () => {
                                 <th>Transaction ID</th>
                                 <th>Asset</th>
                                 <th>Amount</th>
-                                <th>User Address</th>
+                                <th>User / Source</th>
                                 <th>Timestamp</th>
                                 <th>Status</th>
                                 <th>Actions</th>
@@ -66,7 +79,7 @@ const Transactions = () => {
                                     <td>{tx.time}</td>
                                     <td>
                                         <span className={`badge ${tx.status === 'Approved' ? 'badge-success' :
-                                                tx.status === 'Pending' ? 'badge-pending' : 'badge-danger'
+                                            tx.status === 'Pending' ? 'badge-pending' : 'badge-danger'
                                             }`}>
                                             {tx.status}
                                         </span>

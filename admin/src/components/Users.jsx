@@ -1,13 +1,26 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { MoreVertical, UserMinus, Shield, Eye } from 'lucide-react'
+import { apiRequest } from '../utils/api'
 
 const Users = () => {
-    const users = [
-        { id: 1, address: '0x8F2e...a4b2', joined: '2026-02-10', balance: '1,250 USDT', status: 'Active' },
-        { id: 2, address: '0x1A2b...E4d5', joined: '2026-02-11', balance: '450 USDT', status: 'Active' },
-        { id: 3, address: '0x7C3d...F9g0', joined: '2026-02-12', balance: '0 USDT', status: 'Inactive' },
-        { id: 4, address: '0x9E8f...H2j1', joined: '2026-02-13', balance: '12,000 USDT', status: 'Active' },
-    ]
+    const [users, setUsers] = useState([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const data = await apiRequest('/admin/users');
+                setUsers(data);
+                setLoading(false);
+            } catch (error) {
+                console.error('Users fetch error:', error);
+                setLoading(false);
+            }
+        };
+        fetchUsers();
+    }, []);
+
+    if (loading) return <div>Loading users...</div>;
 
     return (
         <div className="view-animate">
@@ -22,19 +35,17 @@ const Users = () => {
                         <thead>
                             <tr>
                                 <th>Wallet Address</th>
-                                <th>Joined Date</th>
-                                <th>Total Balance</th>
+                                <th>Balance</th>
                                 <th>Status</th>
                                 <th>Access Level</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {users.map(user => (
-                                <tr key={user.id}>
+                            {users.map((user, i) => (
+                                <tr key={i}>
                                     <td style={{ fontFamily: 'monospace', color: '#3b82f6', fontWeight: 600 }}>{user.address}</td>
-                                    <td>{user.joined}</td>
-                                    <td>{user.balance}</td>
+                                    <td>{user.balance} USDT</td>
                                     <td>
                                         <span className={`badge ${user.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>
                                             {user.status}

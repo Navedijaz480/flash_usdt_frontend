@@ -7,17 +7,34 @@ import TokenOps from './components/TokenOps'
 import SystemLogs from './components/SystemLogs'
 
 const App = () => {
-    const [isAuthorized, setIsAuthorized] = useState(false)
+    const [isAuthorized, setIsAuthorized] = useState(!!localStorage.getItem('adminToken'))
     const [licenseKey, setLicenseKey] = useState('')
     const [activeTab, setActiveTab] = useState('dashboard')
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault()
-        if (licenseKey === 'ADMIN-FLASH-2026') {
-            setIsAuthorized(true)
-        } else {
-            alert('Invalid License Key')
+        try {
+            const response = await fetch('http://localhost:5000/api/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ licenseKey })
+            });
+            const data = await response.json();
+            if (data.success) {
+                localStorage.setItem('adminToken', data.token);
+                setIsAuthorized(true);
+            } else {
+                alert(data.message || 'Invalid License Key');
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            alert('Server connection failed');
         }
+    }
+
+    const handleLogout = () => {
+        localStorage.removeItem('adminToken');
+        setIsAuthorized(false);
     }
 
     const renderContent = () => {
@@ -113,7 +130,7 @@ const App = () => {
                         </div>
                     </div>
                     <button
-                        onClick={() => setIsAuthorized(false)}
+                        onClick={handleLogout}
                         className="btn btn-outline"
                         style={{ width: '100%', color: '#ef4444' }}
                     >

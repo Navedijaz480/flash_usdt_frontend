@@ -1,13 +1,39 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Wallet, ArrowUpRight, ArrowDownRight, Users, Activity } from 'lucide-react'
+import { apiRequest } from '../utils/api'
 
 const Dashboard = () => {
-    const stats = [
-        { label: 'Total Volume', value: '$1,284,500.00', change: '+12.5%', icon: Wallet, color: '#3b82f6' },
-        { label: 'Active Users', value: '3,842', change: '+4.2%', icon: Users, color: '#10b981' },
-        { label: 'Daily Transfers', value: '142', change: '-2.1%', icon: ArrowUpRight, color: '#f59e0b' },
-        { label: 'System Health', value: '99.9%', change: 'Stable', icon: Activity, color: '#8b5cf6' },
-    ]
+    const [stats, setStats] = useState([])
+    const [recentActivity, setRecentActivity] = useState([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                const [statsData, activityData] = await Promise.all([
+                    apiRequest('/admin/stats'),
+                    apiRequest('/admin/transactions')
+                ]);
+
+                setStats([
+                    { label: 'Total Volume', value: `$${statsData.totalVolume}`, change: '+12.5%', icon: Wallet, color: '#3b82f6' },
+                    { label: 'Active Users', value: statsData.activeUsers.toString(), change: '+4.2%', icon: Users, color: '#10b981' },
+                    { label: 'Total Transactions', value: statsData.totalTransactions.toString(), change: '+2.1%', icon: ArrowUpRight, color: '#f59e0b' },
+                    { label: 'System Health', value: statsData.systemStatus, change: 'Stable', icon: Activity, color: '#8b5cf6' },
+                ]);
+
+                setRecentActivity(activityData.slice(0, 5));
+                setLoading(false);
+            } catch (error) {
+                console.error('Dashboard fetch error:', error);
+                setLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+    }, []);
+
+    if (loading) return <div>Loading dashboard...</div>;
 
     return (
         <div className="view-animate">
@@ -37,35 +63,25 @@ const Dashboard = () => {
                         <table className="table">
                             <thead>
                                 <tr>
-                                    <th>Event</th>
-                                    <th>User</th>
+                                    <th>ID</th>
+                                    <th>Asset</th>
                                     <th>Amount</th>
                                     <th>Time</th>
                                     <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>Transfer to External</td>
-                                    <td>0x71C...3E21</td>
-                                    <td style={{ color: '#ef4444' }}>-$1,200.00</td>
-                                    <td>2 mins ago</td>
-                                    <td><span className="badge badge-success">Completed</span></td>
-                                </tr>
-                                <tr>
-                                    <td>Flash Mint</td>
-                                    <td>Admin (0x000)</td>
-                                    <td style={{ color: '#10b981' }}>+$50,000.00</td>
-                                    <td>15 mins ago</td>
-                                    <td><span className="badge badge-success">Completed</span></td>
-                                </tr>
-                                <tr>
-                                    <td>Approval Request</td>
-                                    <td>0x4A2...F129</td>
-                                    <td>$5.00</td>
-                                    <td>1 hour ago</td>
-                                    <td><span className="badge badge-pending">Pending</span></td>
-                                </tr>
+                                {recentActivity.map(tx => (
+                                    <tr key={tx.id}>
+                                        <td style={{ fontWeight: 600 }}>{tx.id}</td>
+                                        <td>{tx.asset}</td>
+                                        <td style={{ color: tx.type === 'burn' ? '#ef4444' : '#10b981' }}>
+                                            {tx.type === 'burn' ? '-' : '+'}{tx.amount}
+                                        </td>
+                                        <td>{tx.time}</td>
+                                        <td><span className={`badge ${tx.status === 'Approved' ? 'badge-success' : 'badge-pending'}`}>{tx.status}</span></td>
+                                    </tr>
+                                ))}
                             </tbody>
                         </table>
                     </div>
@@ -82,10 +98,10 @@ const Dashboard = () => {
                                 <div style={{ flex: 1 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
                                         <span style={{ fontWeight: 600 }}>{asset}</span>
-                                        <span style={{ color: '#94a3b8' }}>82%</span>
+                                        <span style={{ color: '#94a3b8' }}>-</span>
                                     </div>
                                     <div style={{ height: '6px', background: '#1e293b', borderRadius: '3px', overflow: 'hidden' }}>
-                                        <div style={{ width: asset === 'USDT' ? '82%' : asset === 'ETH' ? '45%' : '30%', height: '100%', background: '#3b82f6' }} />
+                                        <div style={{ width: '0%', height: '100%', background: '#3b82f6' }} />
                                     </div>
                                 </div>
                             </div>

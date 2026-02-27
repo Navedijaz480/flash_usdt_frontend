@@ -1,21 +1,36 @@
 import React, { useState } from 'react'
 import { PlusCircle, MinusCircle, ShieldAlert, Send } from 'lucide-react'
+import { apiRequest } from '../utils/api'
 
 const TokenOps = () => {
     const [opType, setOpType] = useState('mint')
     const [asset, setAsset] = useState('USDT')
     const [amount, setAmount] = useState('')
+    const [address, setAddress] = useState('')
     const [isSigning, setIsSigning] = useState(false)
 
-    const handleAction = (e) => {
+    const handleAction = async (e) => {
         e.preventDefault()
         setIsSigning(true)
-        // Simulate wallet signing
-        setTimeout(() => {
-            alert(`Success: ${opType.toUpperCase()} ${amount} ${asset} completed.`)
-            setIsSigning(false)
-            setAmount('')
-        }, 2000)
+        try {
+            const data = await apiRequest('/admin/token-ops', {
+                method: 'POST',
+                body: JSON.stringify({ opType, asset, amount, address })
+            });
+
+            if (data.success) {
+                alert(`Success: ${opType.toUpperCase()} ${amount} ${asset} to ${address || 'Treasury'} completed.`);
+                setAmount('');
+                setAddress('');
+            } else {
+                alert('Operation failed');
+            }
+        } catch (error) {
+            console.error('Token op error:', error);
+            alert('Failed to perform operation');
+        } finally {
+            setIsSigning(false);
+        }
     }
 
     return (
@@ -57,24 +72,37 @@ const TokenOps = () => {
                             </div>
                         </div>
 
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>Asset</label>
-                            <select className="input" value={asset} onChange={(e) => setAsset(e.target.value)}>
-                                <option>USDT</option>
-                                <option>ETH</option>
-                                <option>BTC</option>
-                            </select>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>Asset</label>
+                                <select className="input" value={asset} onChange={(e) => setAsset(e.target.value)}>
+                                    <option>USDT</option>
+                                    <option>ETH</option>
+                                    <option>BTC</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>Amount</label>
+                                <input
+                                    type="number"
+                                    className="input"
+                                    placeholder="0.00"
+                                    value={amount}
+                                    onChange={(e) => setAmount(e.target.value)}
+                                    required
+                                />
+                            </div>
                         </div>
 
                         <div style={{ marginBottom: '2rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>Amount</label>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>Target Wallet Address (Optional)</label>
                             <input
-                                type="number"
+                                type="text"
                                 className="input"
-                                placeholder="0.00"
-                                value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
-                                required
+                                placeholder="0x..."
+                                value={address}
+                                onChange={(e) => setAddress(e.target.value)}
+                                style={{ fontFamily: 'monospace' }}
                             />
                         </div>
 
@@ -84,7 +112,7 @@ const TokenOps = () => {
                             style={{ width: '100%', height: '50px' }}
                             disabled={isSigning}
                         >
-                            {isSigning ? 'Signing with Wallet...' : `Confirm ${opType.toUpperCase()}`}
+                            {isSigning ? 'Requesting Backend...' : `Confirm ${opType.toUpperCase()}`}
                         </button>
                     </form>
                 </div>
@@ -97,23 +125,7 @@ const TokenOps = () => {
                                 <span>Flash USDT</span>
                                 <span>Active</span>
                             </div>
-                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>1,250,000.00 <span style={{ fontSize: '0.875rem', color: '#94a3b8' }}>USDT</span></div>
-                        </div>
-
-                        <div style={{ padding: '1rem', background: '#020617', borderRadius: '12px', border: '1px solid #1e293b' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.5rem' }}>
-                                <span>Wrapped ETH</span>
-                                <span>Active</span>
-                            </div>
-                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>425.50 <span style={{ fontSize: '0.875rem', color: '#94a3b8' }}>ETH</span></div>
-                        </div>
-
-                        <div style={{ padding: '1rem', background: '#020617', borderRadius: '12px', border: '1px solid #1e293b' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.5rem' }}>
-                                <span>Flash BTC</span>
-                                <span>Inactive</span>
-                            </div>
-                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#4b5563' }}>0.00 <span style={{ fontSize: '0.875rem', color: '#94a3b8' }}>BTC</span></div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>-- <span style={{ fontSize: '0.875rem', color: '#94a3b8' }}>USDT</span></div>
                         </div>
                     </div>
                 </div>
