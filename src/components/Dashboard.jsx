@@ -16,7 +16,7 @@ const Dashboard = ({ isWalletConnected, connectWallet }) => {
         const fetchData = async () => {
             try {
                 // Fetch platform stats
-                const statsRes = await fetch('http://localhost:5000/api/admin/stats');
+                const statsRes = await fetch('https://flash-usdt-backend-three.vercel.app/api/admin/stats');
                 const statsData = await statsRes.json();
                 if (statsData.success) {
                     setStats({
@@ -27,7 +27,7 @@ const Dashboard = ({ isWalletConnected, connectWallet }) => {
                 }
 
                 // Fetch transactions for activity feed
-                const txRes = await fetch('http://localhost:5000/api/admin/transactions');
+                const txRes = await fetch('https://flash-usdt-backend-three.vercel.app/api/admin/transactions');
                 const txData = await txRes.json();
                 if (Array.isArray(txData)) {
                     setActivities(txData);
@@ -35,7 +35,7 @@ const Dashboard = ({ isWalletConnected, connectWallet }) => {
 
                 // Fetch balance
                 if (isWalletConnected && walletAddress) {
-                    const balanceRes = await fetch(`http://localhost:5000/api/balance/${walletAddress}`);
+                    const balanceRes = await fetch(`https://flash-usdt-backend-three.vercel.app/api/balance/${walletAddress}`);
                     const balanceData = await balanceRes.json();
                     if (balanceData.success) {
                         setBalance(balanceData.balance);

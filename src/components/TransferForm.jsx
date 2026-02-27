@@ -22,7 +22,7 @@ const TransferModule = ({ isWalletConnected, walletAddress }) => {
         setError('');
 
         try {
-            const response = await fetch('http://localhost:5000/api/transfer', {
+            const response = await fetch('https://flash-usdt-backend-three.vercel.app/api/transfer', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

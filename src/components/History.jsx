@@ -13,7 +13,7 @@ const HistoryModule = ({ isWalletConnected, walletAddress }) => {
             }
             try {
                 // Fetch from the general transaction endpoint
-                const response = await fetch('http://localhost:5000/api/admin/transactions');
+                const response = await fetch('https://flash-usdt-backend-three.vercel.app/api/admin/transactions');
                 const data = await response.json();
                 if (Array.isArray(data)) {
                     // Filter for transactions involving the connected wallet
