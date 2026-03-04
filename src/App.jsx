@@ -15,12 +15,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Dashboard from './components/Dashboard';
 import TransferModule from './components/TransferForm';
 import HistoryModule from './components/History';
+import Login from './components/Login';
 
 const App = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('flash_auth') === 'true';
+  });
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('flash_auth', isAuthenticated);
+  }, [isAuthenticated]);
 
   const connectWallet = async () => {
     if (typeof window.ethereum === 'undefined') {
@@ -37,6 +45,17 @@ const App = () => {
       console.error('Connection error', error);
     }
   };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setIsWalletConnected(false);
+    setWalletAddress('');
+    localStorage.removeItem('flash_auth');
+  };
+
+  if (!isAuthenticated) {
+    return <Login onLogin={() => setIsAuthenticated(true)} />;
+  }
 
   const navItems = [
     { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
@@ -79,7 +98,10 @@ const App = () => {
         </nav>
 
         <div className="p-4 border-t border-[#1e293b]">
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors font-semibold text-sm">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors font-semibold text-sm"
+          >
             <LogOut size={18} />
             Sign Out
           </button>
@@ -136,6 +158,7 @@ const App = () => {
                   <Dashboard
                     isWalletConnected={isWalletConnected}
                     connectWallet={connectWallet}
+                    walletAddress={walletAddress}
                   />
                 )}
                 {activeTab === 'transfer' && (
